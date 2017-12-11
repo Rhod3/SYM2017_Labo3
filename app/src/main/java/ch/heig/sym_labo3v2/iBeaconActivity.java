@@ -133,6 +133,8 @@ public class iBeaconActivity extends AppCompatActivity implements BeaconConsumer
                         ibeacons.remove(beacon);
                     }
                 }
+
+                beaconsAdapter.notifyDataSetChanged();
             }
         });
 
