@@ -7,18 +7,25 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
+import android.os.Parcelable;
 import android.os.RemoteException;
 import android.provider.Settings;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.altbeacon.beacon.AltBeacon;
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
 import org.altbeacon.beacon.BeaconManager;
@@ -27,23 +34,22 @@ import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Predicate;
 
 public class iBeaconActivity extends AppCompatActivity implements BeaconConsumer {
 
     private final List<Beacon> ibeacons = new LinkedList<>();
     private BeaconManager beaconManager;
 
-    private static String tagEnteringRegion = "TAG1";
-    private static String tagExitRegion = "TAG2";
-    private static String tagDetermineStateRegion = "TAG3";
-
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
     private static final int REQUEST_ENABLE_BT = 1;
 
-    private TextView test = null;
+    private ListView beaconsListView = null;
+    private ArrayAdapter<Beacon> beaconsAdapter = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +57,20 @@ public class iBeaconActivity extends AppCompatActivity implements BeaconConsumer
         setContentView(R.layout.activity_i_beacon);
 
         //Setting UI
-        test = (TextView) findViewById(R.id.testTextView);
+        beaconsListView = (ListView) findViewById(R.id.beacons_list);
+
+        beaconsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Intent intent = new Intent(iBeaconActivity.this, IBeaconDetailActivity.class);
+                intent.putExtra(getString(R.string.extra_beacon), (Parcelable) ibeacons.get(i));
+                startActivity(intent);
+            }
+        });
+
+        beaconsAdapter = new ArrayAdapter<Beacon>(iBeaconActivity.this,
+                android.R.layout.simple_list_item_1, ibeacons);
+        beaconsListView.setAdapter(beaconsAdapter);
 
         //Creating the beacon manager
         beaconManager = BeaconManager.getInstanceForApplication(this);
@@ -64,6 +83,13 @@ public class iBeaconActivity extends AppCompatActivity implements BeaconConsumer
         checkInternetConnection();
         checkBluetoothStatus();
 
+        //pour le test
+        /*
+        ibeacons.add(new AltBeacon.Builder().setId1("DF7E1C79-43E9-44FF-886F-1D1F7DA6997A")
+                .setId2("1").setId3("1").setRssi(-55).setTxPower(-55).build());
+        ibeacons.add(new AltBeacon.Builder().setId1("DF7E1C79-43E9-44FF-886F-1D1F7DA6997A")
+                .setId2("1").setId3("2").setRssi(-55).setTxPower(-55).build());
+        */
     }
 
     @Override
@@ -91,13 +117,27 @@ public class iBeaconActivity extends AppCompatActivity implements BeaconConsumer
             public void didRangeBeaconsInRegion(Collection<Beacon> collection, Region region) {
                 if (collection.size() > 0) {
                     Beacon firstBeacon = collection.iterator().next();
-                    Toast.makeText(getBaseContext(), "The first beacon " + firstBeacon.toString() + " is about " + firstBeacon.getDistance() + " meters away.", Toast.LENGTH_LONG);
+                    Toast.makeText(iBeaconActivity.this, "The first beacon " + firstBeacon.toString() + " is about " + firstBeacon.getDistance() + " meters away.", Toast.LENGTH_LONG);
+                }
+
+                //Adding new beacons to list
+                for (Beacon beacon : collection) {
+                    if (!ibeacons.contains(beacon)) {
+                        ibeacons.add(beacon);
+                    }
+                }
+
+                //Removing old beacons (not in range anymore)
+                for (Beacon beacon : ibeacons) {
+                    if (!collection.contains(beacon)) {
+                        ibeacons.remove(beacon);
+                    }
                 }
             }
         });
 
         try {
-            beaconManager.startMonitoringBeaconsInRegion(new Region("myMonitoringUniqueId", null, null, null));
+            beaconManager.startRangingBeaconsInRegion(new Region("ch.heig-vd.sym.labo3.ranging", null, null, null));
         } catch (RemoteException e) {    }
     }
 
