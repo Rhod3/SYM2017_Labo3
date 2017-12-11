@@ -19,17 +19,21 @@ import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.MonitorNotifier;
+import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
 
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 
 public class iBeaconActivity extends AppCompatActivity implements BeaconConsumer {
 
-    private List<?> ibeacons;
+    private final List<Beacon> ibeacons = new LinkedList<>();
     private BeaconManager beaconManager;
 
     private static String tagEnteringRegion = "TAG1";
@@ -45,6 +49,9 @@ public class iBeaconActivity extends AppCompatActivity implements BeaconConsumer
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_i_beacon);
+
+        //Setting UI
+        test = (TextView) findViewById(R.id.testTextView);
 
         //Creating the beacon manager
         beaconManager = BeaconManager.getInstanceForApplication(this);
@@ -66,24 +73,26 @@ public class iBeaconActivity extends AppCompatActivity implements BeaconConsumer
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        if (beaconManager.isBound(this)) beaconManager.setBackgroundMode(true);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (beaconManager.isBound(this)) beaconManager.setBackgroundMode(false);
+    }
+
+    @Override
     public void onBeaconServiceConnect() {
-        beaconManager.addMonitorNotifier(new MonitorNotifier() {
+        beaconManager.addRangeNotifier(new RangeNotifier() {
             @Override
-            public void didEnterRegion(Region region) {
-                Log.i(tagEnteringRegion, "I just saw an beacon for the first time!");
-                Toast.makeText(getBaseContext(), "I just saw an beacon for the first time!", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void didExitRegion(Region region) {
-                Log.i(tagExitRegion, "I no longer see an beacon");
-                Toast.makeText(getBaseContext(), "I no longer see an beacon", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void didDetermineStateForRegion(int state, Region region) {
-                Log.i(tagDetermineStateRegion, "I have just switched from seeing/not seeing beacons: "+state);
-                Toast.makeText(getBaseContext(), "I have just switched from seeing/not seeing beacons: "+state, Toast.LENGTH_SHORT).show();
+            public void didRangeBeaconsInRegion(Collection<Beacon> collection, Region region) {
+                if (collection.size() > 0) {
+                    Beacon firstBeacon = collection.iterator().next();
+                    Toast.makeText(getBaseContext(), "The first beacon " + firstBeacon.toString() + " is about " + firstBeacon.getDistance() + " meters away.", Toast.LENGTH_LONG);
+                }
             }
         });
 
