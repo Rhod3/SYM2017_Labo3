@@ -8,6 +8,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
@@ -80,16 +81,9 @@ public class iBeaconActivity extends AppCompatActivity implements BeaconConsumer
 
         //Checking prerequisites
         askLocationPermission();
+        checkLocationEnabled();
         checkInternetConnection();
         checkBluetoothStatus();
-
-        //pour le test
-        /*
-        ibeacons.add(new AltBeacon.Builder().setId1("DF7E1C79-43E9-44FF-886F-1D1F7DA6997A")
-                .setId2("1").setId3("1").setRssi(-55).setTxPower(-55).build());
-        ibeacons.add(new AltBeacon.Builder().setId1("DF7E1C79-43E9-44FF-886F-1D1F7DA6997A")
-                .setId2("1").setId3("2").setRssi(-55).setTxPower(-55).build());
-        */
     }
 
     @Override
@@ -116,25 +110,23 @@ public class iBeaconActivity extends AppCompatActivity implements BeaconConsumer
             @Override
             public void didRangeBeaconsInRegion(Collection<Beacon> collection, Region region) {
                 if (collection.size() > 0) {
-                    Beacon firstBeacon = collection.iterator().next();
-                    Toast.makeText(iBeaconActivity.this, "The first beacon " + firstBeacon.toString() + " is about " + firstBeacon.getDistance() + " meters away.", Toast.LENGTH_LONG);
-                }
-
-                //Adding new beacons to list
-                for (Beacon beacon : collection) {
-                    if (!ibeacons.contains(beacon)) {
-                        ibeacons.add(beacon);
+                    //Adding new beacons to list
+                    for (Beacon beacon : collection) {
+                        if (!ibeacons.contains(beacon)) {
+                            ibeacons.add(beacon);
+                        }
                     }
-                }
 
-                //Removing old beacons (not in range anymore)
-                for (Beacon beacon : ibeacons) {
-                    if (!collection.contains(beacon)) {
-                        ibeacons.remove(beacon);
-                    }
-                }
+                    //Removing old beacons (not in range anymore)
+                    ibeacons.retainAll(collection);
 
-                beaconsAdapter.notifyDataSetChanged();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            beaconsAdapter.notifyDataSetChanged();
+                        }
+                    });
+                }
             }
         });
 
@@ -178,6 +170,12 @@ public class iBeaconActivity extends AppCompatActivity implements BeaconConsumer
                 activeNetwork.isConnected();
     }
 
+    private boolean isLocationEnabled() {
+        LocationManager lm = (LocationManager)iBeaconActivity.this.getSystemService(Context.LOCATION_SERVICE);
+
+        return lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+    }
+
     private void askLocationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             //Android M Permission check
@@ -195,6 +193,24 @@ public class iBeaconActivity extends AppCompatActivity implements BeaconConsumer
                 });
                 builder.show();
             }
+        }
+    }
+
+    private void checkLocationEnabled() {
+        if (!isLocationEnabled()) {
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(R.string.location_status_title);
+            builder.setMessage(R.string.location_status_message);
+            builder.setPositiveButton(android.R.string.ok, null);
+            builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                @TargetApi(Build.VERSION_CODES.M)
+                public void onDismiss(DialogInterface dialogInterface) {
+                    Intent enableInternetIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                    startActivity(enableInternetIntent);
+                }
+            });
+            builder.show();
         }
     }
 

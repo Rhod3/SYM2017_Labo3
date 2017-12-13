@@ -25,9 +25,9 @@ public class IBeaconDetailActivity extends AppCompatActivity {
 
         Beacon beacon = getIntent().getExtras().getParcelable(getString(R.string.extra_beacon));
 
-        uuid.setText("UUID: " + beacon.toString());
+        uuid.setText("UUID: " + beacon.getId1().toString());
         rssi.setText("RSSI:" + beacon.getRssi());
-        major.setText("Major: " + beacon.getId1().toString());
+        major.setText("Major: " + beacon.getId2().toString());
         minor.setText("Minor: " + beacon.getId3().toString());
     }
 }
