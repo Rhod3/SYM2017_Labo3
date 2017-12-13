@@ -9,6 +9,7 @@ import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.Ndef;
+import android.nfc.tech.NfcV;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -30,10 +31,10 @@ public class nfcActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        System.out.println("ON CREATE IN");
         setContentView(R.layout.activity_nfc);
 
         mTextView = (TextView) findViewById(R.id.nfcMainTextView);
-
         mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
 
         if (mNfcAdapter == null) {
@@ -48,6 +49,7 @@ public class nfcActivity extends AppCompatActivity {
         } else {
             mTextView.setText("NFC is enabled.");
         }
+        System.out.println("ON CREATE OUT");
     }
 
     @Override
@@ -58,7 +60,7 @@ public class nfcActivity extends AppCompatActivity {
          * It's important, that the activity is in the foreground (resumed). Otherwise
          * an IllegalStateException is thrown.
          */
-        setupForegroundDispatch(this, mNfcAdapter);
+        setupForegroundDispatch();
     }
 
     @Override
@@ -66,13 +68,14 @@ public class nfcActivity extends AppCompatActivity {
         /**
          * Call this before onPause, otherwise an IllegalArgumentException is thrown as well.
          */
-        stopForegroundDispatch(this, mNfcAdapter);
+        stopForegroundDispatch();
 
         super.onPause();
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
         System.out.println("On New Intent");
         /**
          * This method gets called, when a new Intent gets associated with the current activity instance.
@@ -84,42 +87,42 @@ public class nfcActivity extends AppCompatActivity {
         handleIntent(intent);
     }
 
-    /**
-     * @param activity The corresponding {@link Activity} requesting the foreground dispatch.
-     * @param adapter  The {@link NfcAdapter} used for the foreground dispatch.
-     */
-    public static void setupForegroundDispatch(final Activity activity, NfcAdapter adapter) {
-        System.out.println("IN SETUP FOREGROUND");
-        final Intent intent = new Intent(activity.getApplicationContext(), activity.getClass());
-        intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+    // called in onResume()
+    private void setupForegroundDispatch() {
+        System.out.println("IN FORE");
+        if (mNfcAdapter == null) return;
 
-        final PendingIntent pendingIntent = PendingIntent.getActivity(activity.getApplicationContext(), 0, intent, 0);
+        final Intent intent = new Intent(this, getClass());
+        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
+        final PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
+        IntentFilter ndef = new IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED);
+
+        /*
         IntentFilter[] filters = new IntentFilter[1];
         String[][] techList = new String[][]{};
-
         // Notice that this is the same filter as in our manifest.
         filters[0] = new IntentFilter();
-        filters[0].addAction(NfcAdapter.ACTION_NDEF_DISCOVERED);
+        filters[0].addAction(NfcAdapter.ACTION_TECH_DISCOVERED);
         filters[0].addCategory(Intent.CATEGORY_DEFAULT);
+        */
         try {
-            filters[0].addDataType(MIME_TEXT_PLAIN);
+            ndef.addDataType("text/plain");
         } catch (IntentFilter.MalformedMimeTypeException e) {
-            throw new RuntimeException("Check your mime type.");
+            Log.e(TAG, "MalformedMimeTypeException", e);
         }
-
-        adapter.enableForegroundDispatch(activity, pendingIntent, filters, techList);
-        System.out.println("SETUP FOREGROUND DONE");
+        IntentFilter[] intentFiltersArray = new IntentFilter[] {ndef, };
+        String [][] techListArray = new String[][] {new String[] {NfcV.class.getName()}};
+        mNfcAdapter.enableForegroundDispatch(this, pendingIntent, intentFiltersArray, techListArray);
+        System.out.println("FORE DONE");
     }
 
-    /**
-     * @param activity The corresponding {@link BaseActivity} requesting to stop the foreground dispatch.
-     * @param adapter  The {@link NfcAdapter} used for the foreground dispatch.
-     */
-    public static void stopForegroundDispatch(final Activity activity, NfcAdapter adapter) {
-        System.out.println("IN STOP FOREGROUND");
-        adapter.disableForegroundDispatch(activity);
-        System.out.println("STOP FOREGROUND DONE");
+    // called in onPause()
+    private void stopForegroundDispatch() {
+        System.out.println("IN STOP");
+        if (mNfcAdapter != null) mNfcAdapter.disableForegroundDispatch(this);
+        System.out.println("STOP DONE");
     }
 
     private void handleIntent(Intent intent) {
