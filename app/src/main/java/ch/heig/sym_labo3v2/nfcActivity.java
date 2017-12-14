@@ -19,6 +19,8 @@ import android.widget.Toast;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class nfcActivity extends AppCompatActivity {
 
@@ -27,6 +29,12 @@ public class nfcActivity extends AppCompatActivity {
 
     private TextView mTextView;
     private NfcAdapter mNfcAdapter;
+    private Timer timer;
+    TimerTask task;
+
+    private int time = 20;
+    private boolean timerRunning = false;
+    private byte securityAccessLevel = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,6 +135,10 @@ public class nfcActivity extends AppCompatActivity {
 
     private void handleIntent(Intent intent) {
         System.out.println("In Handle Intent");
+        securityAccessLevel = 10;
+        if (!timerRunning){
+            startTimer();
+        }
         String action = intent.getAction();
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
 
@@ -153,6 +165,31 @@ public class nfcActivity extends AppCompatActivity {
                 }
             }
         }
+    }
+
+    public void startTimer(){
+        timer = new Timer();
+        task = new TimerTask() {
+
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mTextView.setText(String.format("Security Level %d", securityAccessLevel));
+                        securityAccessLevel--;
+                        System.out.println("Security Level updated " + securityAccessLevel);
+                        if (securityAccessLevel < 0) {
+                            System.out.println("Timer cancelled");
+                            timerRunning = false;
+                            timer.cancel();
+                        }
+                    }
+                });
+            }
+        };
+        timerRunning = true;
+        timer.scheduleAtFixedRate(task, 0, 1000);
     }
 
     private class NdefReaderTask extends AsyncTask<Tag, Void, String> {
