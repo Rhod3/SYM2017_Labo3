@@ -1,6 +1,5 @@
 package ch.heig.sym_labo3v2;
 
-import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -14,11 +13,16 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -27,7 +31,20 @@ public class nfcActivity extends AppCompatActivity {
     public static final String MIME_TEXT_PLAIN = "text/plain";
     public static final String TAG = "NfcDemo";
 
-    private TextView mTextView;
+    private final String HIGH_LEVEL = "High level";
+    private final String MEDIUM_LEVEL = "Medium level";
+    private final String LOW_LEVEL = "Low level";
+
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+
+    //
+    private TextView accessGrantedTextView;
+    private TextView currentSecurityLevelTextView;
+    private TextView lastTimeScannedTextView;
+    private Button nfcOnlyButton;
+    private Button nfcAndPasswordButton;
+    private EditText passwordEditText;
+
     private NfcAdapter mNfcAdapter;
     private Timer timer;
     TimerTask task;
@@ -42,7 +59,31 @@ public class nfcActivity extends AppCompatActivity {
         System.out.println("ON CREATE IN");
         setContentView(R.layout.activity_nfc);
 
-        mTextView = (TextView) findViewById(R.id.nfcMainTextView);
+        accessGrantedTextView = (TextView) findViewById(R.id.nfcMainTextView);
+        currentSecurityLevelTextView = (TextView) findViewById(R.id.nfcSecurityLeveTextView);
+        lastTimeScannedTextView = (TextView) findViewById(R.id.lastScanTextView);
+
+        passwordEditText = (EditText) findViewById(R.id.passwordInput);
+        nfcAndPasswordButton = (Button) findViewById(R.id.nfcAndPasswordButton);
+        nfcOnlyButton = (Button) findViewById(R.id.nfcOnlyButton);
+
+        nfcOnlyButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                displayAccessLevel();
+            }
+        });
+        nfcAndPasswordButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!passwordEditText.getText().toString().isEmpty()) {
+                    displayAccessLevel();
+                } else {
+                    accessGrantedTextView.setText("Please fill in a password");
+                }
+            }
+        });
+
         mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
 
         if (mNfcAdapter == null) {
@@ -53,9 +94,9 @@ public class nfcActivity extends AppCompatActivity {
         }
 
         if (!mNfcAdapter.isEnabled()) {
-            mTextView.setText("NFC is disabled.");
+            accessGrantedTextView.setText("NFC is disabled.");
         } else {
-            mTextView.setText("NFC is enabled.");
+            accessGrantedTextView.setText("NFC is enabled.");
         }
         System.out.println("ON CREATE OUT");
     }
@@ -120,8 +161,8 @@ public class nfcActivity extends AppCompatActivity {
         } catch (IntentFilter.MalformedMimeTypeException e) {
             Log.e(TAG, "MalformedMimeTypeException", e);
         }
-        IntentFilter[] intentFiltersArray = new IntentFilter[] {ndef, };
-        String [][] techListArray = new String[][] {new String[] {NfcV.class.getName()}};
+        IntentFilter[] intentFiltersArray = new IntentFilter[]{ndef,};
+        String[][] techListArray = new String[][]{new String[]{NfcV.class.getName()}};
         mNfcAdapter.enableForegroundDispatch(this, pendingIntent, intentFiltersArray, techListArray);
         System.out.println("FORE DONE");
     }
@@ -136,9 +177,11 @@ public class nfcActivity extends AppCompatActivity {
     private void handleIntent(Intent intent) {
         System.out.println("In Handle Intent");
         securityAccessLevel = 10;
-        if (!timerRunning){
+        if (!timerRunning) {
             startTimer();
         }
+        lastTimeScannedTextView.setText(sdf.format(new Date()));
+        
         String action = intent.getAction();
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
 
@@ -167,7 +210,7 @@ public class nfcActivity extends AppCompatActivity {
         }
     }
 
-    public void startTimer(){
+    public void startTimer() {
         timer = new Timer();
         task = new TimerTask() {
 
@@ -176,7 +219,7 @@ public class nfcActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mTextView.setText(String.format("Security Level %d", securityAccessLevel));
+                        displayCurrentSecurityLevel();
                         securityAccessLevel--;
                         System.out.println("Security Level updated " + securityAccessLevel);
                         if (securityAccessLevel < 0) {
@@ -249,8 +292,24 @@ public class nfcActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String result) {
             if (result != null) {
-                mTextView.setText("Read content: " + result);
+                accessGrantedTextView.setText("Read content: " + result);
             }
         }
+    }
+
+    private void displayAccessLevel() {
+        String access = "You have no access right. Please scan an NFC badge.";
+        if (securityAccessLevel > 7 && securityAccessLevel <= 10) {
+            access = "You have a high access level";
+        } else if (securityAccessLevel > 4) {
+            access = "You have a medium access level";
+        } else if (securityAccessLevel > 0) {
+            access = "You have a low access level";
+        }
+        accessGrantedTextView.setText(access);
+    }
+
+    private void displayCurrentSecurityLevel() {
+        currentSecurityLevelTextView.setText(String.format("Security Level %d", securityAccessLevel));
     }
 }
