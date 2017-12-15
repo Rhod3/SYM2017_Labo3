@@ -20,19 +20,13 @@ public class sensorActivity extends AppCompatActivity implements SensorEventList
     private Sensor accelerometerSensor;
     private Sensor magneticSensor;
 
-    private float[] lastRotMatrix = {0f, 0f, 0f, 0f,
-            0f, 0f, 0f, 0f,
-            0f, 0f, 0f, 0f,
-            0f, 0f, 0f, 0f};
+    private float[] rotationMatix = {1f, 0f, 0f, 0f,
+            0f, 1f, 0f, 0f,
+            0f, 0f, 1f, 0f,
+            0f, 0f, 0f, 1f};
 
-    private float[] newRotMatix = {0f, 0f, 0f, 0f,
-            0f, 0f, 0f, 0f,
-            0f, 0f, 0f, 0f,
-            0f, 0f, 0f, 0f};
-
-    private float[] gravity = null;
-    private float[] geoMagnetic = null;
-
+    private float[] gravity = {0f, 0f, 0f};
+    private float[] geoMagnetic = {0f, 0f, 0f};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,7 +68,6 @@ public class sensorActivity extends AppCompatActivity implements SensorEventList
         sensorManager.unregisterListener(this);
     }
 
-
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         // On commence par vérifier que le sensor est fiable
@@ -83,7 +76,6 @@ public class sensorActivity extends AppCompatActivity implements SensorEventList
 
         /* On récupère le type d'événement dans un switch, et en fonction, on récupère les valeurs
          * et on les met dans la bonne matrice */
-
         switch (sensorEvent.sensor.getType()) {
             case Sensor.TYPE_ACCELEROMETER:
                 this.gravity = sensorEvent.values;
@@ -94,14 +86,11 @@ public class sensorActivity extends AppCompatActivity implements SensorEventList
                 break;
         }
 
-        if (gravity != null && geoMagnetic != null) {
-            // We do not need any inclination matrix
 
-            boolean ok = SensorManager.getRotationMatrix(newRotMatix, null, gravity, geoMagnetic);
+        boolean isValid = SensorManager.getRotationMatrix(rotationMatix, null, gravity, geoMagnetic);
 
-            if (ok) {
-                lastRotMatrix = this.opglr.swapRotMatrix(newRotMatix);
-            }
+        if (isValid) {
+            rotationMatix = this.opglr.swapRotMatrix(rotationMatix);
         }
     }
 
