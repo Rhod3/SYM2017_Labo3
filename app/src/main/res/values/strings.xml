@@ -1,3 +1,19 @@
 <resources>
     <string name="app_name">SYM_Labo3V2</string>
+    <string name="extra_beacon"></string>
+    <string name="location_permission_title">Location needed</string>e
+    <string name="location_permission_message">We need location access to detect beacons.
+        Please allow this app to use your location.</string>
+    <string name="location_status_title">Location needed</string>e
+    <string name="location_status_message">We need location to be enabled to detect beacons.
+        Please enable location.</string>
+    <string name="location_permission_fail_title">Permission refused</string>e
+    <string name="location_permission_fail_message">Since location access has not been granted,
+        this app will not be able to discover beacons when running in background.</string>
+    <string name="bluetooth_permission_title">Bluetooth needed</string>e
+    <string name="bluetooth_permission_message">We need the Bluetooth to be enabled to detect beacons.
+        Please enable bluetooth.</string>
+    <string name="internet_permission_title">Internet needed</string>e
+    <string name="internet_permission_message">We need Internet to be enabled to detect beacons.
+        Please enable Internet connection.</string>
 </resources>

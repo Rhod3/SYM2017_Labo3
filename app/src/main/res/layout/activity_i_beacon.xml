@@ -6,4 +6,8 @@
     android:layout_height="match_parent"
     tools:context="ch.heig.sym_labo3v2.iBeaconActivity">
 
+    <ListView
+        android:id="@+id/beacons_list"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"></ListView>
 </android.support.constraint.ConstraintLayout>

@@ -6,6 +6,7 @@
     <uses-feature
         android:name="android.hardware.nfc"
         android:required="true" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
@@ -38,7 +39,6 @@
         <activity android:name=".barcodeActivity" />
         <activity android:name=".iBeaconActivity" />
         <activity android:name=".sensorActivity" />
-
-
+        <activity android:name=".IBeaconDetailActivity"></activity>
     </application>
 </manifest>
