@@ -39,7 +39,7 @@ public class barcodeActivity extends AppCompatActivity {
                 String format = intent.getStringExtra("SCAN_RESULT_FORMAT");
                 barcodeScannerResult.setText(String.format("Format: %s, Content: %s", format, contents));
             } else if (resultCode == RESULT_CANCELED) {
-                barcodeScannerResult.setText("Scanning canceled :(");
+                barcodeScannerResult.setText("Scan canceled :(");
             }
         }
     }

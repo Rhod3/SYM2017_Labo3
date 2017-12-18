@@ -31,11 +31,8 @@ public class nfcActivity extends AppCompatActivity {
     public static final String MIME_TEXT_PLAIN = "text/plain";
     public static final String TAG = "NfcDemo";
 
-    private final String HIGH_LEVEL = "High level";
-    private final String MEDIUM_LEVEL = "Medium level";
-    private final String LOW_LEVEL = "Low level";
-
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+    private final int AUTHENTICATE_MAX = 10;
+    private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
     //
     private TextView accessGrantedTextView;
@@ -148,21 +145,15 @@ public class nfcActivity extends AppCompatActivity {
 
         IntentFilter ndef = new IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED);
 
-        /*
-        IntentFilter[] filters = new IntentFilter[1];
-        String[][] techList = new String[][]{};
-        // Notice that this is the same filter as in our manifest.
-        filters[0] = new IntentFilter();
-        filters[0].addAction(NfcAdapter.ACTION_TECH_DISCOVERED);
-        filters[0].addCategory(Intent.CATEGORY_DEFAULT);
-        */
         try {
             ndef.addDataType("text/plain");
         } catch (IntentFilter.MalformedMimeTypeException e) {
             Log.e(TAG, "MalformedMimeTypeException", e);
         }
+
         IntentFilter[] intentFiltersArray = new IntentFilter[]{ndef,};
         String[][] techListArray = new String[][]{new String[]{NfcV.class.getName()}};
+
         mNfcAdapter.enableForegroundDispatch(this, pendingIntent, intentFiltersArray, techListArray);
         System.out.println("FORE DONE");
     }
@@ -176,7 +167,7 @@ public class nfcActivity extends AppCompatActivity {
 
     private void handleIntent(Intent intent) {
         System.out.println("In Handle Intent");
-        securityAccessLevel = 10;
+        securityAccessLevel = AUTHENTICATE_MAX;
         if (!timerRunning) {
             startTimer();
         }
@@ -300,11 +291,11 @@ public class nfcActivity extends AppCompatActivity {
     private void displayAccessLevel() {
         String access = "You have no access right. Please scan an NFC badge.";
         if (securityAccessLevel > 7 && securityAccessLevel <= 10) {
-            access = "You have a high access level";
+            access = "You have a high level access";
         } else if (securityAccessLevel > 4) {
-            access = "You have a medium access level";
+            access = "You have a medium level access";
         } else if (securityAccessLevel > 0) {
-            access = "You have a low access level";
+            access = "You have a low level access";
         }
         accessGrantedTextView.setText(access);
     }
