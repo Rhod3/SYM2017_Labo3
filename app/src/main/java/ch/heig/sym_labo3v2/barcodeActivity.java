@@ -7,11 +7,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.google.zxing.integration.android.IntentIntegrator;
-
 public class barcodeActivity extends AppCompatActivity {
 
-    private Button barocdeScannerButton;
+    private Button barcodeScannerButton;
     private TextView barcodeScannerResult;
 
     @Override
@@ -19,10 +17,10 @@ public class barcodeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_barcode);
 
-        this.barocdeScannerButton = (Button) findViewById(R.id.barcodeScannerButton);
+        this.barcodeScannerButton = (Button) findViewById(R.id.barcodeScannerButton);
         this.barcodeScannerResult = (TextView) findViewById(R.id.barcodeResultTextView);
 
-        barocdeScannerButton.setOnClickListener(new View.OnClickListener() {
+        barcodeScannerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent("com.google.zxing.client.android.SCAN");
