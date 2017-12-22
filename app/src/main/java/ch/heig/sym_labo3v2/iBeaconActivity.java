@@ -60,6 +60,9 @@ public class iBeaconActivity extends AppCompatActivity implements BeaconConsumer
         //Setting UI
         beaconsListView = (ListView) findViewById(R.id.beacons_list);
 
+        /* When we click on an element of the ListView, we travel to a new activity
+        showing the details of the chosen element in the ListView.
+         */
         beaconsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
@@ -140,9 +143,8 @@ public class iBeaconActivity extends AppCompatActivity implements BeaconConsumer
                                            String permissions[], int[] grantResults) {
         switch (requestCode) {
             case PERMISSION_REQUEST_COARSE_LOCATION: {
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.d("TAG1000", "coarse location permission granted");
-                } else {
+                //Alerting the user of the consequences of not having the permission to locate him
+                if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
                     final AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     builder.setTitle(R.string.location_permission_fail_title);
                     builder.setMessage(R.string.location_permission_fail_message);
@@ -161,6 +163,10 @@ public class iBeaconActivity extends AppCompatActivity implements BeaconConsumer
         }
     }
 
+    /**
+     * Checks if the device is connected to internet.
+     * @return true if the device is connected to internet, false otherwise.
+     */
     private boolean isConnected() {
         ConnectivityManager cm =
                 (ConnectivityManager)getBaseContext().getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -170,12 +176,19 @@ public class iBeaconActivity extends AppCompatActivity implements BeaconConsumer
                 activeNetwork.isConnected();
     }
 
+    /**
+     * Checks if the location service is enabled.
+     * @return true if the location service is enabled, false otherwise.
+     */
     private boolean isLocationEnabled() {
         LocationManager lm = (LocationManager)iBeaconActivity.this.getSystemService(Context.LOCATION_SERVICE);
 
         return lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
     }
 
+    /**
+     * Alerts the user to notify him that the device needs location permission.
+     */
     private void askLocationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             //Android M Permission check
@@ -196,6 +209,10 @@ public class iBeaconActivity extends AppCompatActivity implements BeaconConsumer
         }
     }
 
+    /**
+     * if the location service is not enabled, alerts the user to enable it and sends him to
+     * the location settings.
+     */
     private void checkLocationEnabled() {
         if (!isLocationEnabled()) {
             final AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -214,6 +231,10 @@ public class iBeaconActivity extends AppCompatActivity implements BeaconConsumer
         }
     }
 
+    /**
+     * if the device is not connected to internet, alerts the user to enable it and sends him to
+     * the internet settings.
+     */
     private void checkInternetConnection() {
         if (!isConnected()) {
             final AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -232,6 +253,9 @@ public class iBeaconActivity extends AppCompatActivity implements BeaconConsumer
         }
     }
 
+    /**
+     * Checks if the Bluetooth services are enabled. If not, alerts the user to enable it.
+     */
     private void checkBluetoothStatus() {
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (!bluetoothAdapter.isEnabled()) {

@@ -16,4 +16,8 @@
     <string name="internet_permission_title">Internet needed</string>e
     <string name="internet_permission_message">We need Internet to be enabled to detect beacons.
         Please enable Internet connection.</string>
+    <string name="beacon_detail_uuid">UUID: </string>
+    <string name="beacon_detail_rssi">RSSI: </string>
+    <string name="beacon_detail_major">Major: </string>
+    <string name="beacon_detail_minor">Minor: </string>
 </resources>

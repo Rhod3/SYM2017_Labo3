@@ -18,16 +18,18 @@ public class IBeaconDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ibeacon_detail);
 
+        //Setting the UI
         uuid = (TextView) findViewById(R.id.uuid);
         rssi = (TextView) findViewById(R.id.rssi);
         major = (TextView) findViewById(R.id.major);
         minor = (TextView) findViewById(R.id.minor);
 
+        //Getting the element selected in the iBeaconActivity activity.
         Beacon beacon = getIntent().getExtras().getParcelable(getString(R.string.extra_beacon));
 
-        uuid.setText("UUID: " + beacon.getId1().toString());
-        rssi.setText("RSSI:" + beacon.getRssi());
-        major.setText("Major: " + beacon.getId2().toString());
-        minor.setText("Minor: " + beacon.getId3().toString());
+        uuid.setText(R.string.beacon_detail_uuid + beacon.getId1().toString());
+        rssi.setText(R.string.beacon_detail_rssi + beacon.getRssi());
+        major.setText(R.string.beacon_detail_major + beacon.getId2().toString());
+        minor.setText(R.string.beacon_detail_minor + beacon.getId3().toString());
     }
 }
