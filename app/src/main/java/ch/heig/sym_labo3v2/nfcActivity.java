@@ -28,16 +28,15 @@ import java.util.TimerTask;
 
 public class nfcActivity extends AppCompatActivity {
 
-    public static final String MIME_TEXT_PLAIN = "text/plain";
     public static final String TAG = "NfcDemo";
 
     private final int AUTHENTICATE_MAX = 10;
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
-    //
     private TextView accessGrantedTextView;
     private TextView currentSecurityLevelTextView;
     private TextView lastTimeScannedTextView;
+    private TextView nfcContentTextView;
     private Button nfcOnlyButton;
     private Button nfcAndPasswordButton;
     private EditText passwordEditText;
@@ -59,6 +58,7 @@ public class nfcActivity extends AppCompatActivity {
         accessGrantedTextView = (TextView) findViewById(R.id.nfcMainTextView);
         currentSecurityLevelTextView = (TextView) findViewById(R.id.nfcSecurityLeveTextView);
         lastTimeScannedTextView = (TextView) findViewById(R.id.lastScanTextView);
+        nfcContentTextView = (TextView) findViewById(R.id.nfcContentTextView);
 
         passwordEditText = (EditText) findViewById(R.id.passwordInput);
         nfcAndPasswordButton = (Button) findViewById(R.id.nfcAndPasswordButton);
@@ -143,6 +143,8 @@ public class nfcActivity extends AppCompatActivity {
 
         final PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
+        // Choose the IntentFilter according to your NFC technology
+        // IntentFilter ndef = new IntentFilter(NfcAdapter.ACTION_NDEF_DISCOVERED);
         IntentFilter ndef = new IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED);
 
         try {
@@ -172,33 +174,10 @@ public class nfcActivity extends AppCompatActivity {
             startTimer();
         }
         lastTimeScannedTextView.setText(sdf.format(new Date()));
-        
-        String action = intent.getAction();
-        if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
 
-            String type = intent.getType();
-            if (MIME_TEXT_PLAIN.equals(type)) {
 
-                Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-                new NdefReaderTask().execute(tag);
-
-            } else {
-                Log.d(TAG, "Wrong mime type: " + type);
-            }
-        } else if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(action)) {
-
-            // In case we would still use the Tech Discovered Intent
-            Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-            String[] techList = tag.getTechList();
-            String searchedTech = Ndef.class.getName();
-
-            for (String tech : techList) {
-                if (searchedTech.equals(tech)) {
-                    new NdefReaderTask().execute(tag);
-                    break;
-                }
-            }
-        }
+        Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+        new NdefReaderTask().execute(tag);
     }
 
     public void startTimer() {
@@ -233,9 +212,10 @@ public class nfcActivity extends AppCompatActivity {
             Tag tag = params[0];
 
             Ndef ndef = Ndef.get(tag);
+
             if (ndef == null) {
                 // NDEF is not supported by this Tag.
-                return null;
+                return "Not an NDEF tag";
             }
 
             NdefMessage ndefMessage = ndef.getCachedNdefMessage();
@@ -283,7 +263,7 @@ public class nfcActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String result) {
             if (result != null) {
-                accessGrantedTextView.setText("Read content: " + result);
+                nfcContentTextView.setText(result);
             }
         }
     }
